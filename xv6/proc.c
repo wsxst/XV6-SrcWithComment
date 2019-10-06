@@ -1,3 +1,6 @@
+/*
+ * 主要包含进程管理初始化、初始化用户进程init、创建子进程、复制进程、进程的空间分配、使用allocproc增加进程的地址空间、进程调度、唤醒进程、睡眠进程、杀死进程、退出进程、等待进程结束和进程上下文切换。
+ */
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -31,16 +34,15 @@ pinit(void)
 // If found, change state to EMBRYO and initialize
 // state required to run in the kernel.
 // Otherwise return 0.
-static struct proc*
-allocproc(void)
+static struct proc* allocproc(void)
 {
   struct proc *p;
   char *sp;
 
-  acquire(&ptable.lock);
+  acquire(&ptable.lock);//获取页表锁
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
-      goto found;
+      goto found;//神奇的goto语句……？
   release(&ptable.lock);
   return 0;
 
@@ -74,9 +76,8 @@ found:
 }
 
 //PAGEBREAK: 32
-// Set up first user process.
-void
-userinit(void)
+// Set up first user process. 这里注意，是第一个
+void userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
