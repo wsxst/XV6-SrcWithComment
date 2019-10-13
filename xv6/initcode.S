@@ -1,4 +1,5 @@
 # Initial process execs /init.
+# 初始化进程执行
 
 #include "syscall.h"
 #include "traps.h"
@@ -14,10 +15,10 @@ start:
   int $T_SYSCALL
 
 # for(;;) exit();
-exit:
+exit: # 这种就属于标签
   movl $SYS_exit, %eax
   int $T_SYSCALL
-  jmp exit
+  jmp exit # 跳转到exit标签
 
 # char init[] = "/init\0";
 init:

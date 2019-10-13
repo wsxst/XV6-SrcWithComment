@@ -1,3 +1,4 @@
+// 转换栈，建立任务段描述符表
 #include "param.h"
 #include "types.h"
 #include "defs.h"
@@ -12,9 +13,10 @@ pde_t *kpgdir;  // for use in scheduler()
 struct segdesc gdt[NSEGS];
 
 // Set up CPU's kernel segment descriptors.
+// 建立内核段描述符
 // Run once on entry on each CPU.
-void
-seginit(void)
+// 只在每个CPU上跑一次
+void seginit(void)
 {
   struct cpu *c;
 
@@ -42,8 +44,7 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
-walkpgdir(pde_t *pgdir, const void *va, int alloc)
+static pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
   pte_t *pgtab;
@@ -67,8 +68,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
-mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
+static int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
   pte_t *pte;
@@ -125,8 +125,7 @@ static struct kmap {
 };
 
 // Set up kernel part of a page table.
-pde_t*
-setupkvm(void)
+pde_t* setupkvm(void)
 {
   pde_t *pgdir;
   struct kmap *k;
@@ -160,15 +159,14 @@ switchkvm(void)
   lcr3(v2p(kpgdir));   // switch to the kernel page table
 }
 
-// Switch TSS and h/w page table to correspond to process p.
-void
-switchuvm(struct proc *p)
+// Switch TSS（任务状态段） and h/w page table to correspond to process p.
+void switchuvm(struct proc *p)
 {
   pushcli();
   cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
   cpu->gdt[SEG_TSS].s = 0;
   cpu->ts.ss0 = SEG_KDATA << 3;
-  cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;
+  cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;// 存栈顶指针
   ltr(SEG_TSS << 3);
   if(p->pgdir == 0)
     panic("switchuvm: no pgdir");

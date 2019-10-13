@@ -1,4 +1,5 @@
 // Segments in proc->gdt.
+// 全局描述符里面总共有7段
 #define NSEGS     7
 
 // Per-CPU state

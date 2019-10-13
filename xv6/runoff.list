@@ -72,6 +72,7 @@ init.c
 sh.c
 
 # bootloader
+# 可以看出来
 bootasm.S
 bootmain.c
 

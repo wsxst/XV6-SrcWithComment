@@ -2,6 +2,10 @@
 #include "memlayout.h"
 #include "mmu.h"
 
+# BootLoader第一步就要运行这里
+# BootLoader是操作系统启动时的重要一环，负责从16位实模式切换到32位保护模式并且将存在存储设备的操作系统二进制文件读入内存，最后将控制权交给操作系统。
+# 实模式：PC在启动时运行在实模式下。在实模式下，内存寻址方式是由16位段寄存器的内容乘以16（10H）当做段基地址（直接参考https://www.cnblogs.com/xjjsk/p/9396505.html），加上16位偏移地址形成20位的物理地址，最大寻址空间1MB，最大分段64KB。在实模式下，所有段都是可读、可写、可执行的
+# 在这个文件中，系统初始化CPU的运行状态
 # Start the first CPU: switch to 32-bit protected mode, jump into C.
 # The BIOS loads this code from the first sector of the hard disk into
 # memory at physical address 0x7c00 and starts executing in real mode
@@ -62,20 +66,21 @@ start32:
   movw    %ax, %gs                # -> GS
 
   # Set up the stack pointer and call into C.
-  movl    $start, %esp
-  call    bootmain
+  movl    $start, %esp            # 把32B（长字）的数据从start寄存器写入esp寄存器
+  call    bootmain                # 调用bootmain.c中的bootmain函数
 
   # If bootmain returns (it shouldn't), trigger a Bochs
   # breakpoint if running under Bochs, then loop.
-  movw    $0x8a00, %ax            # 0x8a00 -> port 0x8a00
+  movw    $0x8a00, %ax            # 0x8a00 -> port 0x8a00 movw把16位立即数（也就是常数）放到寄存器ax的低16位，高16位清0
   movw    %ax, %dx
-  outw    %ax, %dx
+  outw    %ax, %dx                # 写入16位（双字）数据
   movw    $0x8ae0, %ax            # 0x8ae0 -> port 0x8a00
   outw    %ax, %dx
 spin:
   jmp     spin
 
 # Bootstrap GDT
+# GDT：全局描述符表
 .p2align 2                                # force 4 byte alignment
 gdt:
   SEG_NULLASM                             # null seg

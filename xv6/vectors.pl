@@ -1,3 +1,6 @@
+# 这里还必须运行Perl脚本（我感觉是编译的一部分）才能生成vectors.S文件
+# vectors.S文件的内容应该就是print的内容，主要作用是定义了256个IDT的入口，其中8、10-14、17比较特殊
+# 这里定义了激发中断和陷入的入口
 #!/usr/bin/perl -w
 
 # Generate vectors.S, the trap/interrupt entry points.
@@ -15,7 +18,7 @@ for(my $i = 0; $i < 256; $i++){
         print "  pushl \$0\n";
     }
     print "  pushl \$$i\n";
-    print "  jmp alltraps\n";
+    print "  jmp alltraps\n"; # 这里会跳转到trapasm.S中
 }
 
 print "\n# vector table\n";

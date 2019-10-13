@@ -1,3 +1,4 @@
+# 定义了SYSCALL_name的含义
 #include "syscall.h"
 #include "traps.h"
 

@@ -1,3 +1,4 @@
+// 可编程中断控制器及相关函数、中断请求
 // Intel 8259A programmable interrupt controllers.
 
 #include "types.h"

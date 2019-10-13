@@ -1,3 +1,4 @@
+// 为SMP系统管理硬件中断，包括ioapicenable()、ioapicinit()、ioapicwrite()、ioapicread()函数和ioapic结构。
 // The I/O APIC manages hardware interrupts for an SMP system.
 // http://www.intel.com/design/chipsets/datashts/29056601.pdf
 // See also picirq.c.

@@ -1,3 +1,4 @@
+// 包含系统调用函数syscall()和获取系统调用参数的相关函数
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -123,8 +124,8 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 };
 
-void
-syscall(void)
+//用户程序就通过这个函数进行系统调用
+void syscall(void)
 {
   int num;
 
