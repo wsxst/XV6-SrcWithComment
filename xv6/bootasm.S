@@ -2,10 +2,10 @@
 #include "memlayout.h"
 #include "mmu.h"
 
-# BootLoaderµÚÒ»²½¾ÍÒªÔËĞĞÕâÀï
-# BootLoaderÊÇ²Ù×÷ÏµÍ³Æô¶¯Ê±µÄÖØÒªÒ»»·£¬¸ºÔğ´Ó16Î»ÊµÄ£Ê½ÇĞ»»µ½32Î»±£»¤Ä£Ê½²¢ÇÒ½«´æÔÚ´æ´¢Éè±¸µÄ²Ù×÷ÏµÍ³¶ş½øÖÆÎÄ¼ş¶ÁÈëÄÚ´æ£¬×îºó½«¿ØÖÆÈ¨½»¸ø²Ù×÷ÏµÍ³¡£
-# ÊµÄ£Ê½£ºPCÔÚÆô¶¯Ê±ÔËĞĞÔÚÊµÄ£Ê½ÏÂ¡£ÔÚÊµÄ£Ê½ÏÂ£¬ÄÚ´æÑ°Ö··½Ê½ÊÇÓÉ16Î»¶Î¼Ä´æÆ÷µÄÄÚÈİ³ËÒÔ16£¨10H£©µ±×ö¶Î»ùµØÖ·£¨Ö±½Ó²Î¿¼https://www.cnblogs.com/xjjsk/p/9396505.html£©£¬¼ÓÉÏ16Î»Æ«ÒÆµØÖ·ĞÎ³É20Î»µÄÎïÀíµØÖ·£¬×î´óÑ°Ö·¿Õ¼ä1MB£¬×î´ó·Ö¶Î64KB¡£ÔÚÊµÄ£Ê½ÏÂ£¬ËùÓĞ¶Î¶¼ÊÇ¿É¶Á¡¢¿ÉĞ´¡¢¿ÉÖ´ĞĞµÄ
-# ÔÚÕâ¸öÎÄ¼şÖĞ£¬ÏµÍ³³õÊ¼»¯CPUµÄÔËĞĞ×´Ì¬
+# BootLoaderç¬¬ä¸€æ­¥å°±è¦è¿è¡Œè¿™é‡Œ
+# BootLoaderæ˜¯æ“ä½œç³»ç»Ÿå¯åŠ¨æ—¶çš„é‡è¦ä¸€ç¯ï¼Œè´Ÿè´£ä»16ä½å®æ¨¡å¼åˆ‡æ¢åˆ°32ä½ä¿æŠ¤æ¨¡å¼å¹¶ä¸”å°†å­˜åœ¨å­˜å‚¨è®¾å¤‡çš„æ“ä½œç³»ç»ŸäºŒè¿›åˆ¶æ–‡ä»¶è¯»å…¥å†…å­˜ï¼Œæœ€åå°†æ§åˆ¶æƒäº¤ç»™æ“ä½œç³»ç»Ÿã€‚
+# å®æ¨¡å¼ï¼šPCåœ¨å¯åŠ¨æ—¶è¿è¡Œåœ¨å®æ¨¡å¼ä¸‹ã€‚åœ¨å®æ¨¡å¼ä¸‹ï¼Œå†…å­˜å¯»å€æ–¹å¼æ˜¯ç”±16ä½æ®µå¯„å­˜å™¨çš„å†…å®¹ä¹˜ä»¥16ï¼ˆ10Hï¼‰å½“åšæ®µåŸºåœ°å€ï¼ˆç›´æ¥å‚è€ƒhttps://www.cnblogs.com/xjjsk/p/9396505.htmlï¼‰ï¼ŒåŠ ä¸Š16ä½åç§»åœ°å€å½¢æˆ20ä½çš„ç‰©ç†åœ°å€ï¼Œæœ€å¤§å¯»å€ç©ºé—´1MBï¼Œæœ€å¤§åˆ†æ®µ64KBã€‚åœ¨å®æ¨¡å¼ä¸‹ï¼Œæ‰€æœ‰æ®µéƒ½æ˜¯å¯è¯»ã€å¯å†™ã€å¯æ‰§è¡Œçš„
+# åœ¨è¿™ä¸ªæ–‡ä»¶ä¸­ï¼Œç³»ç»Ÿåˆå§‹åŒ–CPUçš„è¿è¡ŒçŠ¶æ€
 # Start the first CPU: switch to 32-bit protected mode, jump into C.
 # The BIOS loads this code from the first sector of the hard disk into
 # memory at physical address 0x7c00 and starts executing in real mode
@@ -66,21 +66,21 @@ start32:
   movw    %ax, %gs                # -> GS
 
   # Set up the stack pointer and call into C.
-  movl    $start, %esp            # °Ñ32B£¨³¤×Ö£©µÄÊı¾İ´Óstart¼Ä´æÆ÷Ğ´Èëesp¼Ä´æÆ÷
-  call    bootmain                # µ÷ÓÃbootmain.cÖĞµÄbootmainº¯Êı
+  movl    $start, %esp            # æŠŠ32Bï¼ˆé•¿å­—ï¼‰çš„æ•°æ®ä»startå¯„å­˜å™¨å†™å…¥espå¯„å­˜å™¨
+  call    bootmain                # è°ƒç”¨bootmain.cä¸­çš„bootmainå‡½æ•°
 
   # If bootmain returns (it shouldn't), trigger a Bochs
   # breakpoint if running under Bochs, then loop.
-  movw    $0x8a00, %ax            # 0x8a00 -> port 0x8a00 movw°Ñ16Î»Á¢¼´Êı£¨Ò²¾ÍÊÇ³£Êı£©·Åµ½¼Ä´æÆ÷axµÄµÍ16Î»£¬¸ß16Î»Çå0
+  movw    $0x8a00, %ax            # 0x8a00 -> port 0x8a00 movwæŠŠ16ä½ç«‹å³æ•°ï¼ˆä¹Ÿå°±æ˜¯å¸¸æ•°ï¼‰æ”¾åˆ°å¯„å­˜å™¨axçš„ä½16ä½ï¼Œé«˜16ä½æ¸…0
   movw    %ax, %dx
-  outw    %ax, %dx                # Ğ´Èë16Î»£¨Ë«×Ö£©Êı¾İ
+  outw    %ax, %dx                # å†™å…¥16ä½ï¼ˆåŒå­—ï¼‰æ•°æ®
   movw    $0x8ae0, %ax            # 0x8ae0 -> port 0x8a00
   outw    %ax, %dx
 spin:
   jmp     spin
 
 # Bootstrap GDT
-# GDT£ºÈ«¾ÖÃèÊö·û±í
+# GDTï¼šå…¨å±€æè¿°ç¬¦è¡¨
 .p2align 2                                # force 4 byte alignment
 gdt:
   SEG_NULLASM                             # null seg

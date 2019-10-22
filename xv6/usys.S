@@ -1,4 +1,4 @@
-# ¶¨ÒåÁËSYSCALL_nameµÄº¬Òå
+# å®šä¹‰äº†SYSCALL_nameçš„å«ä¹‰
 #include "syscall.h"
 #include "traps.h"
 

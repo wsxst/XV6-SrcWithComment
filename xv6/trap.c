@@ -1,4 +1,4 @@
-// 包含加载和建立中断描述表、中断处理的函数
+// 鍖呭惈鍔犺浇鍜屽缓绔嬩腑鏂弿杩拌〃銆佷腑鏂鐞嗙殑鍑芥暟
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -9,7 +9,7 @@
 #include "traps.h"
 #include "spinlock.h"
 
-// Interrupt descriptor table (shared by all CPUs). 所有CPU共享的中断描述表
+// Interrupt descriptor table (shared by all CPUs). 鎵�鏈塁PU鍏变韩鐨勪腑鏂弿杩拌〃
 struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
@@ -27,7 +27,7 @@ tvinit(void)
   initlock(&tickslock, "time");
 }
 
-//初始化中断描述表
+//鍒濆鍖栦腑鏂弿杩拌〃
 void idtinit(void)
 {
   lidt(idt, sizeof(idt));

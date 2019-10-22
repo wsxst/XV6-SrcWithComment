@@ -1,39 +1,39 @@
-# ½¨Á¢trap frame£¬µ÷ÓÃtrap£¨tf£©º¯Êı£¬²¢ÔÚµ÷ÓÃÍêtrapº¯Êıºó»Ö¸´ÏÖ³¡
+# å»ºç«‹trap frameï¼Œè°ƒç”¨trapï¼ˆtfï¼‰å‡½æ•°ï¼Œå¹¶åœ¨è°ƒç”¨å®Œtrapå‡½æ•°åæ¢å¤ç°åœº
 #include "mmu.h"
 
 # vectors.S sends all traps here.
 .globl alltraps
 alltraps:
-  # Build trap frame.Õâ¸ö½á¹¹°üº¬ÁËÏİÈë³ÌĞòÍê³ÉÖ®ºó´¦ÀíÆ÷»Ö¸´ÓÃ»§½ø³Ì¼Ä´æÆ÷ÖµµÄËùÓĞĞÅÏ¢
+  # Build trap frame.è¿™ä¸ªç»“æ„åŒ…å«äº†é™·å…¥ç¨‹åºå®Œæˆä¹‹åå¤„ç†å™¨æ¢å¤ç”¨æˆ·è¿›ç¨‹å¯„å­˜å™¨å€¼çš„æ‰€æœ‰ä¿¡æ¯
   pushl %ds
   pushl %es
   pushl %fs
   pushl %gs
-  pushal # ÕâÀïÓ¦¸ÃÊÇ°ÑËùÓĞµÄ32Î»Í¨ÓÃ¼Ä´æÆ÷Ñ¹Õ»
+  pushal # è¿™é‡Œåº”è¯¥æ˜¯æŠŠæ‰€æœ‰çš„32ä½é€šç”¨å¯„å­˜å™¨å‹æ ˆ
   
   # Set up data and per-cpu segments.
-  # ÈÃ¼Ä´æÆ÷ds,esÖĞº¬ÓĞÖ¸ÏòÊı¾İ¶ÎµÄÖ¸ÕëÖµ
+  # è®©å¯„å­˜å™¨ds,esä¸­å«æœ‰æŒ‡å‘æ•°æ®æ®µçš„æŒ‡é’ˆå€¼
   movw $(SEG_KDATA<<3), %ax
   movw %ax, %ds
   movw %ax, %es
-  # ÈÃ¼Ä´æÆ÷fs,gsÖĞº¬ÓĞÖ¸Ïòper-cpuÊı¾İ¶ÎµÄÖ¸ÕëÖµ
+  # è®©å¯„å­˜å™¨fs,gsä¸­å«æœ‰æŒ‡å‘per-cpuæ•°æ®æ®µçš„æŒ‡é’ˆå€¼
   movw $(SEG_KCPU<<3), %ax
   movw %ax, %fs
   movw %ax, %gs
 
   # Call trap(tf), where tf=%esp
-  pushl %esp # ½«espÖĞµÄÖµ×÷Îª²ÎÊı´«¸øtrap
-  call trap # µ÷ÓÃtrapº¯Êı
-  addl $4, %esp # espµÄÖµ+4,4ÊÇ¸öÁ¢¼´Êı¡£ÓÉÓÚÄÚ´æ²¼¾ÖÖĞÕ»ÊÇÓÉ¸ßµØÖ·ÏòµÍµØÖ·À©Õ¹µÄ£¬Òò´Ë½«espµÄÖµ¼Ó4Ïàµ±ÓÚ½«Õ»¶¥ÔªËØµ¯³ö£¬´ËÊ±espµÄÖµÖ¸Ïò±êÇ©trapret
+  pushl %esp # å°†espä¸­çš„å€¼ä½œä¸ºå‚æ•°ä¼ ç»™trap
+  call trap # è°ƒç”¨trapå‡½æ•°
+  addl $4, %esp # espçš„å€¼+4,4æ˜¯ä¸ªç«‹å³æ•°ã€‚ç”±äºå†…å­˜å¸ƒå±€ä¸­æ ˆæ˜¯ç”±é«˜åœ°å€å‘ä½åœ°å€æ‰©å±•çš„ï¼Œå› æ­¤å°†espçš„å€¼åŠ 4ç›¸å½“äºå°†æ ˆé¡¶å…ƒç´ å¼¹å‡ºï¼Œæ­¤æ—¶espçš„å€¼æŒ‡å‘æ ‡ç­¾trapret
 
   # Return falls through to trapret...
 .globl trapret
 trapret:
-  popal # ËùÓĞÍ¨ÓÃ¼Ä´æÆ÷³öÕ»
-  # ÒÔÏÂ4ĞĞ£¬ÒÀ´Î³öÕ»
+  popal # æ‰€æœ‰é€šç”¨å¯„å­˜å™¨å‡ºæ ˆ
+  # ä»¥ä¸‹4è¡Œï¼Œä¾æ¬¡å‡ºæ ˆ
   popl %gs
   popl %fs
   popl %es
   popl %ds
-  addl $0x8, %esp  # trapno and errcode ÏİÈëºÅºÍ´íÎó´úÂë³öÕ»£¬Ô­ÀíÍ¬ÉÏ
-  iret # »ØÓÃ»§¿Õ¼ä
+  addl $0x8, %esp  # trapno and errcode é™·å…¥å·å’Œé”™è¯¯ä»£ç å‡ºæ ˆï¼ŒåŸç†åŒä¸Š
+  iret # å›ç”¨æˆ·ç©ºé—´

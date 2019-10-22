@@ -1,4 +1,4 @@
-//定义了一些数据类型的别名
+//瀹氫箟浜嗕竴浜涙暟鎹被鍨嬬殑鍒悕
 typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned char  uchar;

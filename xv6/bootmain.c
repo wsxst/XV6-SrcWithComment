@@ -14,7 +14,7 @@
 
 void readseg(uchar*, uint, uint);
 
-//将内核的ELF文件从硬盘加载进内存，并将控制权转给内核程序
+//灏嗗唴鏍哥殑ELF鏂囦欢浠庣‖鐩樺姞杞借繘鍐呭瓨锛屽苟灏嗘帶鍒舵潈杞粰鍐呮牳绋嬪簭
 void bootmain(void)
 {
   struct elfhdr *elf;
@@ -24,7 +24,7 @@ void bootmain(void)
 
   elf = (struct elfhdr*)0x10000;  // scratch space
 
-  // Read 1st page off disk将ELF文件的第一个内存页从磁盘加载进内存，前4096个字节就是第一个内存页
+  // Read 1st page off disk灏咵LF鏂囦欢鐨勭涓�涓唴瀛橀〉浠庣鐩樺姞杞借繘鍐呭瓨锛屽墠4096涓瓧鑺傚氨鏄涓�涓唴瀛橀〉
   readseg((uchar*)elf, 4096, 0);
 
   // Is this an ELF executable?

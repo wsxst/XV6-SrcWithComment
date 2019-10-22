@@ -1,5 +1,5 @@
 /*
- * ��Ҫ�������̹�����ʼ������ʼ���û�����init�������ӽ��̡����ƽ��̡����̵Ŀռ���䡢ʹ��allocproc���ӽ��̵ĵ�ַ�ռ䡢���̵��ȡ����ѽ��̡�˯�߽��̡�ɱ�����̡��˳����̡��ȴ����̽����ͽ����������л���
+ * 主要包含进程管理初始化、初始化用户进程init、创建子进程、复制进程、进程的空间分配、使用allocproc增加进程的地址空间、进程调度、唤醒进程、睡眠进程、杀死进程、退出进程、等待进程结束和进程上下文切换。
  */
 #include "types.h"
 #include "defs.h"
@@ -38,10 +38,10 @@ static struct proc* allocproc(void)
   struct proc *p;
   char *sp;
 
-  acquire(&ptable.lock);//��ȡҳ����
+  acquire(&ptable.lock);//获取页表锁
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
-      goto found;//�����goto��䡭����
+      goto found;//神奇的goto语句……？
   release(&ptable.lock);
   return 0;
 
@@ -75,7 +75,7 @@ found:
 }
 
 //PAGEBREAK: 32
-// Set up first user process. ����ע�⣬�ǵ�һ��
+// Set up first user process. 这里注意，是第一个
 void userinit(void)
 {
   struct proc *p;
@@ -88,7 +88,7 @@ void userinit(void)
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
-  // ����CPU�ֳ�
+  // 保存CPU现场
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
   p->tf->es = p->tf->ds;

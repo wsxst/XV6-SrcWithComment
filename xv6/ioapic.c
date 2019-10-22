@@ -1,4 +1,4 @@
-// ÎªSMPÏµÍ³¹ÜÀíÓ²¼şÖĞ¶Ï£¬°üÀ¨ioapicenable()¡¢ioapicinit()¡¢ioapicwrite()¡¢ioapicread()º¯ÊıºÍioapic½á¹¹¡£
+// ä¸ºSMPç³»ç»Ÿç®¡ç†ç¡¬ä»¶ä¸­æ–­ï¼ŒåŒ…æ‹¬ioapicenable()ã€ioapicinit()ã€ioapicwrite()ã€ioapicread()å‡½æ•°å’Œioapicç»“æ„ã€‚
 // The I/O APIC manages hardware interrupts for an SMP system.
 // http://www.intel.com/design/chipsets/datashts/29056601.pdf
 // See also picirq.c.

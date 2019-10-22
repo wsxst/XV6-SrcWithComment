@@ -1,4 +1,4 @@
-// 互斥锁，区别于自旋锁
+// 浜掓枼閿侊紝鍖哄埆浜庤嚜鏃嬮攣
 // Mutual exclusion lock.
 struct spinlock {
   uint locked;       // Is the lock held?

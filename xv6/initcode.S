@@ -1,5 +1,5 @@
 # Initial process execs /init.
-# ³õÊ¼»¯½ø³ÌÖ´ĞĞ
+# åˆå§‹åŒ–è¿›ç¨‹æ‰§è¡Œ
 
 #include "syscall.h"
 #include "traps.h"
@@ -15,10 +15,10 @@ start:
   int $T_SYSCALL
 
 # for(;;) exit();
-exit: # ÕâÖÖ¾ÍÊôÓÚ±êÇ©
+exit: # è¿™ç§å°±å±äºæ ‡ç­¾
   movl $SYS_exit, %eax
   int $T_SYSCALL
-  jmp exit # Ìø×ªµ½exit±êÇ©
+  jmp exit # è·³è½¬åˆ°exitæ ‡ç­¾
 
 # char init[] = "/init\0";
 init:

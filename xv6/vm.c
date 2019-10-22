@@ -1,4 +1,4 @@
-// ×ª»»Õ»£¬½¨Á¢ÈÎÎñ¶ÎÃèÊö·û±í
+// è½¬æ¢æ ˆï¼Œå»ºç«‹ä»»åŠ¡æ®µæè¿°ç¬¦è¡¨
 #include "param.h"
 #include "types.h"
 #include "defs.h"
@@ -13,9 +13,9 @@ pde_t *kpgdir;  // for use in scheduler()
 struct segdesc gdt[NSEGS];
 
 // Set up CPU's kernel segment descriptors.
-// ½¨Á¢ÄÚºË¶ÎÃèÊö·û
+// å»ºç«‹å†…æ ¸æ®µæè¿°ç¬¦
 // Run once on entry on each CPU.
-// Ö»ÔÚÃ¿¸öCPUÉÏÅÜÒ»´Î
+// åªåœ¨æ¯ä¸ªCPUä¸Šè·‘ä¸€æ¬¡
 void seginit(void)
 {
   struct cpu *c;
@@ -159,14 +159,14 @@ switchkvm(void)
   lcr3(v2p(kpgdir));   // switch to the kernel page table
 }
 
-// Switch TSS£¨ÈÎÎñ×´Ì¬¶Î£© and h/w page table to correspond to process p.
+// Switch TSSï¼ˆä»»åŠ¡çŠ¶æ€æ®µï¼‰ and h/w page table to correspond to process p.
 void switchuvm(struct proc *p)
 {
   pushcli();
   cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
   cpu->gdt[SEG_TSS].s = 0;
   cpu->ts.ss0 = SEG_KDATA << 3;
-  cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;// ´æÕ»¶¥Ö¸Õë
+  cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;// å­˜æ ˆé¡¶æŒ‡é’ˆ
   ltr(SEG_TSS << 3);
   if(p->pgdir == 0)
     panic("switchuvm: no pgdir");

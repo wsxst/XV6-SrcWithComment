@@ -1,4 +1,4 @@
-// 处理内置（non-I/O）（这里我理解的就是非外设咯）的中断
+// 澶勭悊鍐呯疆锛坣on-I/O锛夛紙杩欓噷鎴戠悊瑙ｇ殑灏辨槸闈炲璁惧挴锛夌殑涓柇
 // The local APIC manages internal (non-I/O) interrupts.
 // See Chapter 8 & Appendix C of Intel processor manual volume 3.
 

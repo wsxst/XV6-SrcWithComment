@@ -1,4 +1,4 @@
-// ¿É±à³ÌÖĞ¶Ï¿ØÖÆÆ÷¼°Ïà¹Øº¯Êı¡¢ÖĞ¶ÏÇëÇó
+// å¯ç¼–ç¨‹ä¸­æ–­æ§åˆ¶å™¨åŠç›¸å…³å‡½æ•°ã€ä¸­æ–­è¯·æ±‚
 // Intel 8259A programmable interrupt controllers.
 
 #include "types.h"
