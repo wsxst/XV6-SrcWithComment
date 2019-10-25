@@ -44,14 +44,15 @@ void seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
+//191023wh-给定虚拟地址，返回该地址对应的二级页表中的页表项
 static pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
   pte_t *pgtab;
 
-  pde = &pgdir[PDX(va)];
-  if(*pde & PTE_P){
-    pgtab = (pte_t*)p2v(PTE_ADDR(*pde));
+  pde = &pgdir[PDX(va)];//191023wh-将虚拟地址va右移22位，得到在页目录中的索引，进而得到页目录项
+  if(*pde & PTE_P){//191023wh-检查页目录项的有效位P是否有效1
+    pgtab = (pte_t*)p2v(PTE_ADDR(*pde));//191023wh-找到页表位置
   } else {
     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
       return 0;
@@ -62,12 +63,13 @@ static pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // entries, if necessary.
     *pde = v2p(pgtab) | PTE_P | PTE_W | PTE_U;
   }
-  return &pgtab[PTX(va)];
+  return &pgtab[PTX(va)];//191023wh-返回页表项
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
+//191023wh-给定页目录的起始虚拟地址，返回一个页目录项?虚拟地址 va与物理地址 pa映射size个字节，同时赋予该页的权限perm
 static int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -125,6 +127,7 @@ static struct kmap {
 };
 
 // Set up kernel part of a page table.
+//191023wh-分配一页大小的内存，并初始化页目录
 pde_t* setupkvm(void)
 {
   pde_t *pgdir;
@@ -144,6 +147,7 @@ pde_t* setupkvm(void)
 
 // Allocate one page table for the machine for the kernel address
 // space for scheduler processes.
+//191023wh-初始化页目录，并切换到内核虚拟空间
 void
 kvmalloc(void)
 {
@@ -153,6 +157,7 @@ kvmalloc(void)
 
 // Switch h/w page table register to the kernel-only page table,
 // for when no process is running.
+//191023wh-设置cr3寄存器的值为kpgdir首地址
 void
 switchkvm(void)
 {
@@ -160,6 +165,7 @@ switchkvm(void)
 }
 
 // Switch TSS（任务状态段） and h/w page table to correspond to process p.
+//191023wh-用户进程切换时，负责相关数据结构的载入等操作，设置好该用户进程需要的虚拟内存环境
 void switchuvm(struct proc *p)
 {
   pushcli();
@@ -176,6 +182,7 @@ void switchuvm(struct proc *p)
 
 // Load the initcode into address 0 of pgdir.
 // sz must be less than a page.
+//191023wh-把初始化代码加载到页目录的起始处
 void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
@@ -191,6 +198,7 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 
 // Load a program segment into pgdir.  addr must be page-aligned
 // and the pages from addr to addr+sz must already be mapped.
+//191023wh-加载程序段到页目录
 int
 loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 {
@@ -215,6 +223,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 
 // Allocate page tables and physical memory to grow process from oldsz to
 // newsz, which need not be page aligned.  Returns new size or 0 on error.
+//191023wh-增大用户虚拟空间大小
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -244,6 +253,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 // newsz.  oldsz and newsz need not be page-aligned, nor does newsz
 // need to be less than oldsz.  oldsz can be larger than the actual
 // process size.  Returns the new process size.
+//191023wh-减小用户虚拟空间大小
 int
 deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
@@ -272,6 +282,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 
 // Free a page table and all the physical memory pages
 // in the user part.
+//191023wh-释放指定页目录记录的所有物理页框
 void
 freevm(pde_t *pgdir)
 {
@@ -291,6 +302,7 @@ freevm(pde_t *pgdir)
 
 // Clear PTE_U on a page. Used to create an inaccessible
 // page beneath the user stack.
+//191023wh-清除页表中的指定页表项
 void
 clearpteu(pde_t *pgdir, char *uva)
 {
@@ -304,6 +316,7 @@ clearpteu(pde_t *pgdir, char *uva)
 
 // Given a parent process's page table, create a copy
 // of it for a child.
+//191023wh-复制指定的用户进程空间
 pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
@@ -336,6 +349,7 @@ bad:
 
 //PAGEBREAK!
 // Map user virtual address to kernel address.
+//191023wh-映射用户虚拟地址到内核地址
 char*
 uva2ka(pde_t *pgdir, char *uva)
 {
@@ -352,6 +366,7 @@ uva2ka(pde_t *pgdir, char *uva)
 // Copy len bytes from p to user address va in page table pgdir.
 // Most useful when pgdir is not the current page table.
 // uva2ka ensures this only works for PTE_U pages.
+//191023wh-从给定的物理地址处复制len字节到给定的用户地址
 int
 copyout(pde_t *pgdir, uint va, void *p, uint len)
 {

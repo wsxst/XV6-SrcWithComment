@@ -1,7 +1,7 @@
 // Physical memory allocator, intended to allocate
 // memory for user processes, kernel stacks, page table pages,
 // and pipe buffers. Allocates 4096-byte pages.
-
+//191023wh-用户空间、内核栈、页表以及缓冲区分配物理内存
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -41,7 +41,7 @@ kinit2(void *vstart, void *vend)
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
-
+//191023wh-给定的虚拟地址的起始和终止地址，释放这段空间对应的物理空间
 void
 freerange(void *vstart, void *vend)
 {
@@ -56,6 +56,7 @@ freerange(void *vstart, void *vend)
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
+//191023wh-接收虚拟地址，找到对应的物理地址，并释放以该地址为首址的一页空间
 void
 kfree(char *v)
 {
@@ -79,7 +80,7 @@ kfree(char *v)
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
-char*
+char*//191023wh-分配一页物理内存，返回对应的虚拟地址
 kalloc(void)
 {
   struct run *r;

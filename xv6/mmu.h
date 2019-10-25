@@ -148,7 +148,7 @@ struct segdesc {
 typedef uint pte_t;
 
 // Task state segment format
-// ��ҵ״̬��
+// 作业状态段
 struct taskstate {
   uint link;         // Old ts selector
   uint esp0;         // Stack pointers and segment selectors
