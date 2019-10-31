@@ -50,10 +50,11 @@ static pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc)
   pde_t *pde;
   pte_t *pgtab;
 
-  pde = &pgdir[PDX(va)];//191023wh-将虚拟地址va右移22位，得到在页目录中的索引，进而得到页目录项
+  pde = &pgdir[PDX(va)];//191023lzh-PDX取虚拟地址的高10位，为页目录项的偏移地址。取出页目录项pde
   if(*pde & PTE_P){//191023wh-检查页目录项的有效位P是否有效1
     pgtab = (pte_t*)p2v(PTE_ADDR(*pde));//191023wh-找到页表位置
   } else {
+    //lzh-如果页目录项并非有效，就给分配一个页表。
     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
       return 0;
     // Make sure all those PTE_P bits are zero.
@@ -63,13 +64,15 @@ static pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // entries, if necessary.
     *pde = v2p(pgtab) | PTE_P | PTE_W | PTE_U;
   }
-  return &pgtab[PTX(va)];//191023wh-返回页表项
+  return &pgtab[PTX(va)];//191023wh-返回页表项，PTX取va中间10位
 }
 
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
 //191023wh-给定页目录的起始虚拟地址，返回一个页目录项?虚拟地址 va与物理地址 pa映射size个字节，同时赋予该页的权限perm
+//191030lzh-给定虚拟地址空间va-va+size，将这段虚拟空间在页表里创建物理地址映射。
+//首先用walkpgdir找到虚拟地址对应的二级页表项，然后为其填充物理地址pa，权限perm和有效位P
 static int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -96,6 +99,8 @@ static int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 // current process's page table during system calls and interrupts;
 // page protection bits prevent user code from using the kernel's
 // mappings.
+// 一个进程一个页表。没有进程时CPU会用一个kpgdir来代替当前的页表。
+// 页保护位防止用户代码使用内核程序。
 // 
 // setupkvm() and exec() set up every page table like this:
 //
@@ -127,7 +132,8 @@ static struct kmap {
 };
 
 // Set up kernel part of a page table.
-//191023wh-分配一页大小的内存，并初始化页目录
+//191023wh-分配一页大小的内存作为页目录，并初始化页目录
+//191030lzh-并且根据kamp初始化二级页表。
 pde_t* setupkvm(void)
 {
   pde_t *pgdir;
@@ -138,6 +144,7 @@ pde_t* setupkvm(void)
   memset(pgdir, 0, PGSIZE);
   if (p2v(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
+
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start, 
                 (uint)k->phys_start, k->perm) < 0)
@@ -168,6 +175,7 @@ switchkvm(void)
 //191023wh-用户进程切换时，负责相关数据结构的载入等操作，设置好该用户进程需要的虚拟内存环境
 void switchuvm(struct proc *p)
 {
+  //lzh-屏蔽中断
   pushcli();
   cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
   cpu->gdt[SEG_TSS].s = 0;
@@ -183,6 +191,7 @@ void switchuvm(struct proc *p)
 // Load the initcode into address 0 of pgdir.
 // sz must be less than a page.
 //191023wh-把初始化代码加载到页目录的起始处
+//191030lzh-分配一页物理内存，将用户页表中虚拟地址0映射到那一段内存，并把初始化代码拷贝到那一页中
 void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
@@ -355,6 +364,7 @@ uva2ka(pde_t *pgdir, char *uva)
 {
   pte_t *pte;
 
+  //取用户虚拟地址在页表中对应的表项
   pte = walkpgdir(pgdir, uva, 0);
   if((*pte & PTE_P) == 0)
     return 0;

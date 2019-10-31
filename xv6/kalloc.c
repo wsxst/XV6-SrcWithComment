@@ -27,6 +27,7 @@ struct {
 // the pages mapped by entrypgdir on free list.
 // 2. main() calls kinit2() with the rest of the physical pages
 // after installing a full page table that maps them on all cores.
+// 191026lzh 
 void
 kinit1(void *vstart, void *vend)
 {
@@ -46,6 +47,7 @@ void
 freerange(void *vstart, void *vend)
 {
   char *p;
+  //取页首址
   p = (char*)PGROUNDUP((uint)vstart);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
     kfree(p);
@@ -71,6 +73,7 @@ kfree(char *v)
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = (struct run*)v;
+  //插入到链表头
   r->next = kmem.freelist;
   kmem.freelist = r;
   if(kmem.use_lock)

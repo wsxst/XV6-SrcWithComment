@@ -16,6 +16,7 @@
 start:
   cli                         # BIOS enabled interrupts; disable
 
+  # mov des<-src 代表内部扩展, movx src->des代表外部扩展
   # Zero data segment registers DS, ES, and SS.
   xorw    %ax,%ax             # Set %ax to zero
   movw    %ax,%ds             # -> Data Segment
