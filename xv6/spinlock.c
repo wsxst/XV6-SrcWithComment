@@ -31,6 +31,14 @@ acquire(struct spinlock *lk)
   // The xchg is atomic.
   // It also serializes, so that reads after acquire are not
   // reordered before it. 
+
+  // xchg是 x86的一条特殊指令，具有原子性
+  // xchg 交换了内存中的一个字和一个寄存器的值：如果锁已被持有，lk->locked 已经为1，xchg 会返回1然后继续循环
+  //                                         如果锁未被持有，lk->locked 交换为1，xchg 返回0，成功获得了锁，这时循环可以停止
+  // 为什么要使用原子操作 xchg？
+  // 许多处理器会通过指令乱序来提高性能：如果一个指令需要多个周期完成，处理器会希望这条指令尽早开始执行，这样就能与其他指令交叠，避免延误太久
+  // 为了避免乱序可能造成的不确定性，xv6 使用稳妥的 xchg，这样就能保证不出现乱序
+  
   while(xchg(&lk->locked, 1) != 0)
     ;
 
@@ -93,15 +101,21 @@ holding(struct spinlock *lock)
 // it takes two popcli to undo two pushcli.  Also, if interrupts
 // are off, then pushcli, popcli leaves them off.
 
+// 使用 pushcli和 popcli来屏蔽/释放中断
+// pushcli和 popcli不仅包装了 cli 和 sti，还做了计数工作，这样就需要调用两次 popcli 来抵消两次 pushcli
+// 如果代码中获得了两个锁，那么只有当两个锁都被释放后中断才会被允许，因为xv6规定：允许中断时不能持有任何锁
+// 为什么允许中断时不能持有任何锁？中断造成并发，并发时持有锁可能导致死锁
+
 void
 pushcli(void)
 {
   int eflags;
   
   eflags = readeflags();
-  cli();
-  if(cpu->ncli++ == 0)
-    cpu->intena = eflags & FL_IF;
+  cli();                               // x86 屏蔽中断的指令
+  if(cpu->ncli++ == 0)                 // 首次pushcli时进入if分支
+    cpu->intena = eflags & FL_IF;      // 记录首次pushcli前，eflag寄存器中的中断位情况
+                                       // 为什么要记录?
 }
 
 void
@@ -109,9 +123,9 @@ popcli(void)
 {
   if(readeflags()&FL_IF)
     panic("popcli - interruptible");
-  if(--cpu->ncli < 0)
+  if(--cpu->ncli < 0)                  // 抵消pushcli所加的次数
     panic("popcli");
-  if(cpu->ncli == 0 && cpu->intena)
+  if(cpu->ncli == 0 && cpu->intena)    // 当没有任何锁时，并且首次pushcli前中断为开的情况，才允许中断
     sti();
 }
 
