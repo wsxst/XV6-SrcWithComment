@@ -118,6 +118,7 @@ pushcli(void)
   if(cpu->ncli++ == 0)                 // 首次pushcli时进入if分支
     cpu->intena = eflags & FL_IF;      // 记录首次pushcli前，eflag寄存器中的中断位情况
                                        // 为什么要记录?
+                                       // lzh20191107 见popcli；如果pushcli前中断本来就是关闭的，那么popcli没必要开中断。
 }
 
 void
