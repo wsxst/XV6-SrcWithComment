@@ -45,7 +45,7 @@ acquire(struct spinlock *lk)
 
   // Record info about lock acquisition for debugging.
   lk->cpu = cpu;
-  getcallerpcs(&lk, lk->pcs);
+  getcallerpcs(&lk, lk->pcs);//sjc20191117 这里传了锁的地址作为入参
 }
 
 // Release the lock.
@@ -79,10 +79,11 @@ getcallerpcs(void *v, uint pcs[])
   uint *ebp;
   int i;
   
-  ebp = (uint*)v - 2;
+  ebp = (uint*)v - 2;//sjc20191117 这里减2没搞明白是因为什么
   for(i = 0; i < 10; i++){
     if(ebp == 0 || ebp < (uint*)KERNBASE || ebp == (uint*)0xffffffff)
       break;
+	//sjc20191117 这里为什么要这么保存？
     pcs[i] = ebp[1];     // saved %eip
     ebp = (uint*)ebp[0]; // saved %ebp
   }

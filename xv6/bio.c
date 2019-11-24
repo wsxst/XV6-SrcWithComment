@@ -1,3 +1,5 @@
+//块缓冲层
+//（1）同步对磁盘的访问，使得对于每一个块，同一时间只有一份拷贝放在内存中并且只有一个内核线程使用这份拷贝；（2）缓存常用的块以提升性能
 // Buffer cache.
 //
 // The buffer cache is a linked list of buf structures holding
@@ -35,6 +37,9 @@ struct {
   struct buf head;
 } bcache;
 
+
+//main函数中调用
+//从一个静态数组 buf 中构建出一个有 NBUF 个元素的双向链表
 void
 binit(void)
 {
@@ -58,6 +63,8 @@ binit(void)
 // Look through buffer cache for sector on device dev.
 // If not found, allocate fresh block.
 // In either case, return B_BUSY buffer.
+
+//
 static struct buf*
 bget(uint dev, uint sector)
 {
@@ -65,21 +72,22 @@ bget(uint dev, uint sector)
 
   acquire(&bcache.lock);
 
- loop:
+ loop://扫描缓冲区链表
   // Is the sector already cached?
   for(b = bcache.head.next; b != &bcache.head; b = b->next){
     if(b->dev == dev && b->sector == sector){
-      if(!(b->flags & B_BUSY)){
+      if(!(b->flags & B_BUSY)){//找到并且不busy，设置为busy并返回
         b->flags |= B_BUSY;
         release(&bcache.lock);
         return b;
       }
-      sleep(b, &bcache.lock);
+      sleep(b, &bcache.lock);//否则就等待
       goto loop;
     }
   }
 
   // Not cached; recycle some non-busy and clean buffer.
+  //找不到，找一个不是busy且不是dirty的块
   for(b = bcache.head.prev; b != &bcache.head; b = b->prev){
     if((b->flags & B_BUSY) == 0 && (b->flags & B_DIRTY) == 0){
       b->dev = dev;
@@ -93,18 +101,22 @@ bget(uint dev, uint sector)
 }
 
 // Return a B_BUSY buf with the contents of the indicated disk sector.
+//从磁盘中取出一块放入缓冲区
+
 struct buf*
 bread(uint dev, uint sector)
 {
   struct buf *b;
 
-  b = bget(dev, sector);
-  if(!(b->flags & B_VALID))
-    iderw(b);
+
+  b = bget(dev, sector);//获得指定扇区的缓冲区
+  if(!(b->flags & B_VALID)) //如果有效
+    iderw(b);//同步磁盘和块缓冲
   return b;
 }
 
 // Write b's contents to disk.  Must be B_BUSY.
+//把缓冲区中的一块写到磁盘
 void
 bwrite(struct buf *b)
 {
@@ -116,6 +128,7 @@ bwrite(struct buf *b)
 
 // Release a B_BUSY buffer.
 // Move to the head of the MRU list.
+//释放
 void
 brelse(struct buf *b)
 {

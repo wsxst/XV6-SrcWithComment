@@ -5,6 +5,17 @@
 #include "fs.h"
 #include "buf.h"
 
+
+//使得更高层的接口可以将对磁盘的更新按会话打包，通过会话的方式来保证这些操作是原子操作
+//系统调用执行一次写操作的时候，会先把写操作打包成一个日志，当把所有写操作都打包完毕之后，再把日志中的数据写入磁盘。最后删掉日志。
+//begin_trans
+//bp=bread()
+//bp->data[]=...
+//log_write(bp)
+//commit_trans
+
+
+
 // Simple logging. Each system call that might write the file system
 // should be surrounded with begin_trans() and commit_trans() calls.
 //
@@ -34,8 +45,8 @@
 // Contents of the header block, used for both the on-disk header block
 // and to keep track in memory of logged sector #s before commit.
 struct logheader {
-  int n;   
-  int sector[LOGSIZE];
+  int n;   //日志数据块的数目
+  int sector[LOGSIZE];//日志中数据块的内容
 };
 
 struct log {
@@ -65,6 +76,7 @@ initlog(void)
   recover_from_log();
 }
 
+//
 // Copy committed blocks from log to their home location
 static void 
 install_trans(void)
@@ -112,6 +124,7 @@ write_head(void)
   brelse(buf);
 }
 
+//为了从错误中恢复
 static void
 recover_from_log(void)
 {
@@ -121,6 +134,7 @@ recover_from_log(void)
   write_head(); // clear the log
 }
 
+//获取日志使用权
 void
 begin_trans(void)
 {
@@ -132,11 +146,14 @@ begin_trans(void)
   release(&log.lock);
 }
 
+//将日志的logheader写到磁盘
 void
 commit_trans(void)
 {
   if (log.lh.n > 0) {
     write_head();    // Write header to disk -- the real commit
+
+    //从日志中逐块的读并把他们写到文件系统中合适的地方
     install_trans(); // Now install writes to home locations
     log.lh.n = 0; 
     write_head();    // Erase the transaction from the log
@@ -156,6 +173,7 @@ commit_trans(void)
 //   modify bp->data[]
 //   log_write(bp)
 //   brelse(bp)
+//写回一个块
 void
 log_write(struct buf *b)
 {

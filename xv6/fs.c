@@ -49,6 +49,7 @@ bzero(int dev, int bno)
 // Blocks. 
 
 // Allocate a zeroed disk block.
+//分配一个新的磁盘块
 static uint
 balloc(uint dev)
 {
@@ -57,9 +58,14 @@ balloc(uint dev)
   struct superblock sb;
 
   bp = 0;
+  //读出超级块，超级块包含了文件系统的元信息，如总块数
   readsb(dev, &sb);
+  //循环位图的每一块
   for(b = 0; b < sb.size; b += BPB){
+    //计算位图块的位置
+    //引导块 超级块 i节点 位图块
     bp = bread(dev, BBLOCK(b, sb.ninodes));
+    //循环该位图块内的每一位
     for(bi = 0; bi < BPB && b + bi < sb.size; bi++){
       m = 1 << (bi % 8);
       if((bp->data[bi/8] & m) == 0){  // Is block free?
@@ -76,6 +82,7 @@ balloc(uint dev)
 }
 
 // Free a disk block.
+//释放一个磁盘块
 static void
 bfree(int dev, uint b)
 {
