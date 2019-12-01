@@ -49,7 +49,7 @@ bzero(int dev, int bno)
 // Blocks. 
 
 // Allocate a zeroed disk block.
-//����һ���µĴ��̿�
+//分配一个新的磁盘块
 static uint
 balloc(uint dev)
 {
@@ -58,14 +58,14 @@ balloc(uint dev)
   struct superblock sb;
 
   bp = 0;
-  //���������飬������������ļ�ϵͳ��Ԫ��Ϣ�����ܿ���
+  //读出超级块，超级块包含了文件系统的元信息，如总块数
   readsb(dev, &sb);
-  //ѭ��λͼ��ÿһ��
+  //循环位图的每一块
   for(b = 0; b < sb.size; b += BPB){
-    //����λͼ���λ��
-    //������ ������ i�ڵ� λͼ��
+    //计算位图块的位置
+    //引导块 超级块 i节点 位图块
     bp = bread(dev, BBLOCK(b, sb.ninodes));
-    //ѭ����λͼ���ڵ�ÿһλ
+    //循环该位图块内的每一位
     for(bi = 0; bi < BPB && b + bi < sb.size; bi++){
       m = 1 << (bi % 8);
       if((bp->data[bi/8] & m) == 0){  // Is block free?
@@ -82,7 +82,7 @@ balloc(uint dev)
 }
 
 // Free a disk block.
-//�ͷ�һ�����̿�
+//释放一个磁盘块
 static void
 bfree(int dev, uint b)
 {
@@ -179,6 +179,8 @@ static struct inode* iget(uint dev, uint inum);
 //PAGEBREAK!
 // Allocate a new inode with the given type on device dev.
 // A free inode has a type of zero.
+//逐块遍历磁盘上的 i 节点数据结构，寻找一个标记为空闲的 i 节点。当它找到一个时，
+//就会把该inode的 dinode.type 修改为指定的type，最后调用 iget使得它从 i 节点缓存中返回
 struct inode*
 ialloc(uint dev, short type)
 {
@@ -188,7 +190,7 @@ ialloc(uint dev, short type)
   struct superblock sb;
 
   readsb(dev, &sb);
-
+  //没有0，从1号编号，开始遍历
   for(inum = 1; inum < sb.ninodes; inum++){
     bp = bread(dev, IBLOCK(inum));
     dip = (struct dinode*)bp->data + inum%IPB;
@@ -226,6 +228,7 @@ iupdate(struct inode *ip)
 // Find the inode with number inum on device dev
 // and return the in-memory copy. Does not lock
 // the inode and does not read it from disk.
+//获得指定设备的指定inode的内存拷贝
 static struct inode*
 iget(uint dev, uint inum)
 {
@@ -241,12 +244,12 @@ iget(uint dev, uint inum)
       release(&icache.lock);
       return ip;
     }
-    if(empty == 0 && ip->ref == 0)    // Remember empty slot.
+    if(empty == 0 && ip->ref == 0)    // Remember empty slot.记录icache中扫描得到的第一个空闲槽（即当前没有进程指向的inode）
       empty = ip;
   }
 
-  // Recycle an inode cache entry.
-  if(empty == 0)
+  // Recycle an inode cache entry.执行到此，说明icache中没有找到指定的inode，那么就将找到的空闲槽empty作为将来从disk拷贝到内存的位置
+  if(empty == 0)//但是在此函数中不执行从disk拷贝到内存的操作
     panic("iget: no inodes");
 
   ip = empty;
@@ -272,6 +275,7 @@ idup(struct inode *ip)
 
 // Lock the given inode.
 // Reads the inode from disk if necessary.
+//锁住 i 节点
 void
 ilock(struct inode *ip)
 {
@@ -280,13 +284,13 @@ ilock(struct inode *ip)
 
   if(ip == 0 || ip->ref < 1)
     panic("ilock");
-
+  //互斥进入cache
   acquire(&icache.lock);
   while(ip->flags & I_BUSY)
-    sleep(ip, &icache.lock);
+    sleep(ip, &icache.lock);//循环检测
   ip->flags |= I_BUSY;
   release(&icache.lock);
-
+  //如果该inode无效，即当前缓存中的inode滞后于磁盘，需要重新从磁盘读入
   if(!(ip->flags & I_VALID)){
     bp = bread(ip->dev, IBLOCK(ip->inum));
     dip = (struct dinode*)bp->data + ip->inum%IPB;
@@ -304,6 +308,7 @@ ilock(struct inode *ip)
 }
 
 // Unlock the given inode.
+//释放 i 节点的锁，即如果之前有进程因为该i节点busy而sleep，则在此处唤醒
 void
 iunlock(struct inode *ip)
 {
@@ -321,6 +326,7 @@ iunlock(struct inode *ip)
 // be recycled.
 // If that was the last reference and the inode has no links
 // to it, free the inode (and its content) on disk.
+//释放指定的inode，即将inode中的ref减1。如果执行iput的进程是该inode在内存中的最后一个指向，而且没有links指向，则从disk中释放
 void
 iput(struct inode *ip)
 {
@@ -360,12 +366,13 @@ iunlockput(struct inode *ip)
 
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
+//返回 i 节点 ip 中的第 bn 个数据块，如果 ip 还没有这样一个数据块，bmap 就会分配一个。
 static uint
 bmap(struct inode *ip, uint bn)
 {
   uint addr, *a;
   struct buf *bp;
-
+  //前12块
   if(bn < NDIRECT){
     if((addr = ip->addrs[bn]) == 0)
       ip->addrs[bn] = addr = balloc(ip->dev);
@@ -373,7 +380,7 @@ bmap(struct inode *ip, uint bn)
   }
   bn -= NDIRECT;
 
-  if(bn < NINDIRECT){
+  if(bn < NINDIRECT){//防止访问越界
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
@@ -395,6 +402,7 @@ bmap(struct inode *ip, uint bn)
 // to it (no directory entries referring to it)
 // and has no in-memory reference to it (is
 // not an open file or current directory).
+//释放该inode在disk中的数据部分，即真正的文件内容部分。具体操作就是根据addrs中记录的块在disk中的位置，循环调用bfree
 static void
 itrunc(struct inode *ip)
 {
@@ -426,6 +434,7 @@ itrunc(struct inode *ip)
 }
 
 // Copy stat information from inode.
+//把 i 节点的元数据拷贝到 stat 结构体中，这个结构体可通过系统调用 stat 暴露给用户程序。
 void
 stati(struct inode *ip, struct stat *st)
 {
@@ -438,6 +447,7 @@ stati(struct inode *ip, struct stat *st)
 
 //PAGEBREAK!
 // Read data from inode.
+//给定的偏移和读出的量没有超出文件的末尾，超出了文件末尾就会返回比请求的数据量少的数据
 int
 readi(struct inode *ip, char *dst, uint off, uint n)
 {
@@ -466,6 +476,7 @@ readi(struct inode *ip, char *dst, uint off, uint n)
 
 // PAGEBREAK!
 // Write data to inode.
+//从文件超出文件末尾的地方开始的写或者写的过程中超出文件末尾的话会增长这个文件，直到达到最大的文件大小
 int
 writei(struct inode *ip, char *src, uint off, uint n)
 {
@@ -509,6 +520,7 @@ namecmp(const char *s, const char *t)
 
 // Look for a directory entry in a directory.
 // If found, set *poff to byte offset of entry.
+//查找目录中指定名字的条目
 struct inode*
 dirlookup(struct inode *dp, char *name, uint *poff)
 {

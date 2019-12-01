@@ -8,12 +8,12 @@ struct file {
   uint off;
 };
 
-
+//存储在磁盘中inode的结构体dinode，在内存中的存在形式
 // in-memory copy of an inode
 struct inode {
   uint dev;           // Device number
   uint inum;          // Inode number
-  int ref;            // Reference count
+  int ref;            // Reference count 统计有多少个指针指向它。如果 ref 变为0，内核就会丢掉这个 i 节点
   int flags;          // I_BUSY, I_VALID
 
   short type;         // copy of disk inode

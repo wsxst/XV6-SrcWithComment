@@ -13,7 +13,7 @@
 
 // File system super block
 struct superblock {
-  uint size;         // Size of file system image (blocks)
+  uint size;         // Size of file system image (blocks) 
   uint nblocks;      // Number of data blocks
   uint ninodes;      // Number of inodes.
   uint nlog;         // Number of log blocks
@@ -25,12 +25,12 @@ struct superblock {
 
 // On-disk inode structure
 struct dinode {
-  short type;           // File type
+  short type;           // File type 用来区分文件、目录和特殊文件的 i 节点，0表示未分配
   short major;          // Major device number (T_DEV only)
   short minor;          // Minor device number (T_DEV only)
-  short nlink;          // Number of links to inode in file system
-  uint size;            // Size of file (bytes)
-  uint addrs[NDIRECT+1];   // Data block addresses
+  short nlink;          // Number of links to inode in file system 用来记录指向了这一个 i 节点的目录项，这是用于判断一个 i 节点是否应该被释放的
+  uint size;            // Size of file (bytes) 文件的字节数
+  uint addrs[NDIRECT+1];   // Data block addresses 多级索引结构,12+x,这里是一级索引
 };
 
 // Inodes per block.

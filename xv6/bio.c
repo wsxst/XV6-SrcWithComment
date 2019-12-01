@@ -1,5 +1,5 @@
-//¿é»º³å²ã
-//£¨1£©Í¬²½¶Ô´ÅÅÌµÄ·ÃÎÊ£¬Ê¹µÃ¶ÔÓÚÃ¿Ò»¸ö¿é£¬Í¬Ò»Ê±¼äÖ»ÓĞÒ»·İ¿½±´·ÅÔÚÄÚ´æÖĞ²¢ÇÒÖ»ÓĞÒ»¸öÄÚºËÏß³ÌÊ¹ÓÃÕâ·İ¿½±´£»£¨2£©»º´æ³£ÓÃµÄ¿éÒÔÌáÉıĞÔÄÜ
+//å—ç¼“å†²å±‚
+//ï¼ˆ1ï¼‰åŒæ­¥å¯¹ç£ç›˜çš„è®¿é—®ï¼Œä½¿å¾—å¯¹äºæ¯ä¸€ä¸ªå—ï¼ŒåŒä¸€æ—¶é—´åªæœ‰ä¸€ä»½æ‹·è´æ”¾åœ¨å†…å­˜ä¸­å¹¶ä¸”åªæœ‰ä¸€ä¸ªå†…æ ¸çº¿ç¨‹ä½¿ç”¨è¿™ä»½æ‹·è´ï¼›ï¼ˆ2ï¼‰ç¼“å­˜å¸¸ç”¨çš„å—ä»¥æå‡æ€§èƒ½
 // Buffer cache.
 //
 // The buffer cache is a linked list of buf structures holding
@@ -38,8 +38,8 @@ struct {
 } bcache;
 
 
-//mainº¯ÊıÖĞµ÷ÓÃ
-//´ÓÒ»¸ö¾²Ì¬Êı×é buf ÖĞ¹¹½¨³öÒ»¸öÓĞ NBUF ¸öÔªËØµÄË«ÏòÁ´±í
+//mainå‡½æ•°ä¸­è°ƒç”¨
+//ä»ä¸€ä¸ªé™æ€æ•°ç»„ buf ä¸­æ„å»ºå‡ºä¸€ä¸ªæœ‰ NBUF ä¸ªå…ƒç´ çš„åŒå‘é“¾è¡¨
 void
 binit(void)
 {
@@ -72,22 +72,22 @@ bget(uint dev, uint sector)
 
   acquire(&bcache.lock);
 
- loop://É¨Ãè»º³åÇøÁ´±í
+ loop://æ‰«æç¼“å†²åŒºé“¾è¡¨
   // Is the sector already cached?
   for(b = bcache.head.next; b != &bcache.head; b = b->next){
     if(b->dev == dev && b->sector == sector){
-      if(!(b->flags & B_BUSY)){//ÕÒµ½²¢ÇÒ²»busy£¬ÉèÖÃÎªbusy²¢·µ»Ø
+      if(!(b->flags & B_BUSY)){//æ‰¾åˆ°å¹¶ä¸”ä¸busyï¼Œè®¾ç½®ä¸ºbusyå¹¶è¿”å›
         b->flags |= B_BUSY;
         release(&bcache.lock);
         return b;
       }
-      sleep(b, &bcache.lock);//·ñÔò¾ÍµÈ´ı
+      sleep(b, &bcache.lock);//å¦åˆ™å°±ç­‰å¾…
       goto loop;
     }
   }
 
   // Not cached; recycle some non-busy and clean buffer.
-  //ÕÒ²»µ½£¬ÕÒÒ»¸ö²»ÊÇbusyÇÒ²»ÊÇdirtyµÄ¿é
+  //æ‰¾ä¸åˆ°ï¼Œæ‰¾ä¸€ä¸ªä¸æ˜¯busyä¸”ä¸æ˜¯dirtyçš„å—
   for(b = bcache.head.prev; b != &bcache.head; b = b->prev){
     if((b->flags & B_BUSY) == 0 && (b->flags & B_DIRTY) == 0){
       b->dev = dev;
@@ -101,7 +101,7 @@ bget(uint dev, uint sector)
 }
 
 // Return a B_BUSY buf with the contents of the indicated disk sector.
-//´Ó´ÅÅÌÖĞÈ¡³öÒ»¿é·ÅÈë»º³åÇø
+//ä»ç£ç›˜ä¸­å–å‡ºä¸€å—æ”¾å…¥ç¼“å†²åŒº
 
 struct buf*
 bread(uint dev, uint sector)
@@ -109,14 +109,14 @@ bread(uint dev, uint sector)
   struct buf *b;
 
 
-  b = bget(dev, sector);//»ñµÃÖ¸¶¨ÉÈÇøµÄ»º³åÇø
-  if(!(b->flags & B_VALID)) //Èç¹ûÓĞĞ§
-    iderw(b);//Í¬²½´ÅÅÌºÍ¿é»º³å
+  b = bget(dev, sector);//è·å¾—æŒ‡å®šæ‰‡åŒºçš„ç¼“å†²åŒº
+  if(!(b->flags & B_VALID)) //å¦‚æœæœ‰æ•ˆ
+    iderw(b);//åŒæ­¥ç£ç›˜å’Œå—ç¼“å†²
   return b;
 }
 
 // Write b's contents to disk.  Must be B_BUSY.
-//°Ñ»º³åÇøÖĞµÄÒ»¿éĞ´µ½´ÅÅÌ
+//æŠŠç¼“å†²åŒºä¸­çš„ä¸€å—å†™åˆ°ç£ç›˜
 void
 bwrite(struct buf *b)
 {
@@ -128,7 +128,7 @@ bwrite(struct buf *b)
 
 // Release a B_BUSY buffer.
 // Move to the head of the MRU list.
-//ÊÍ·Å
+//é‡Šæ”¾
 void
 brelse(struct buf *b)
 {

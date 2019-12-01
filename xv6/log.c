@@ -6,8 +6,8 @@
 #include "buf.h"
 
 
-//Ê¹µÃ¸ü¸ß²ãµÄ½Ó¿Ú¿ÉÒÔ½«¶Ô´ÅÅÌµÄ¸üĞÂ°´»á»°´ò°ü£¬Í¨¹ı»á»°µÄ·½Ê½À´±£Ö¤ÕâĞ©²Ù×÷ÊÇÔ­×Ó²Ù×÷
-//ÏµÍ³µ÷ÓÃÖ´ĞĞÒ»´ÎĞ´²Ù×÷µÄÊ±ºò£¬»áÏÈ°ÑĞ´²Ù×÷´ò°ü³ÉÒ»¸öÈÕÖ¾£¬µ±°ÑËùÓĞĞ´²Ù×÷¶¼´ò°üÍê±ÏÖ®ºó£¬ÔÙ°ÑÈÕÖ¾ÖĞµÄÊı¾İĞ´Èë´ÅÅÌ¡£×îºóÉ¾µôÈÕÖ¾¡£
+//ä½¿å¾—æ›´é«˜å±‚çš„æ¥å£å¯ä»¥å°†å¯¹ç£ç›˜çš„æ›´æ–°æŒ‰ä¼šè¯æ‰“åŒ…ï¼Œé€šè¿‡ä¼šè¯çš„æ–¹å¼æ¥ä¿è¯è¿™äº›æ“ä½œæ˜¯åŸå­æ“ä½œ
+//ç³»ç»Ÿè°ƒç”¨æ‰§è¡Œä¸€æ¬¡å†™æ“ä½œçš„æ—¶å€™ï¼Œä¼šå…ˆæŠŠå†™æ“ä½œæ‰“åŒ…æˆä¸€ä¸ªæ—¥å¿—ï¼Œå½“æŠŠæ‰€æœ‰å†™æ“ä½œéƒ½æ‰“åŒ…å®Œæ¯•ä¹‹åï¼Œå†æŠŠæ—¥å¿—ä¸­çš„æ•°æ®å†™å…¥ç£ç›˜ã€‚æœ€ååˆ æ‰æ—¥å¿—ã€‚
 //begin_trans
 //bp=bread()
 //bp->data[]=...
@@ -45,8 +45,8 @@
 // Contents of the header block, used for both the on-disk header block
 // and to keep track in memory of logged sector #s before commit.
 struct logheader {
-  int n;   //ÈÕÖ¾Êı¾İ¿éµÄÊıÄ¿
-  int sector[LOGSIZE];//ÈÕÖ¾ÖĞÊı¾İ¿éµÄÄÚÈİ
+  int n;   //æ—¥å¿—æ•°æ®å—çš„æ•°ç›®
+  int sector[LOGSIZE];//æ—¥å¿—ä¸­æ•°æ®å—çš„å†…å®¹
 };
 
 struct log {
@@ -124,7 +124,7 @@ write_head(void)
   brelse(buf);
 }
 
-//ÎªÁË´Ó´íÎóÖĞ»Ö¸´
+//ä¸ºäº†ä»é”™è¯¯ä¸­æ¢å¤
 static void
 recover_from_log(void)
 {
@@ -134,7 +134,7 @@ recover_from_log(void)
   write_head(); // clear the log
 }
 
-//»ñÈ¡ÈÕÖ¾Ê¹ÓÃÈ¨
+//è·å–æ—¥å¿—ä½¿ç”¨æƒ
 void
 begin_trans(void)
 {
@@ -146,14 +146,14 @@ begin_trans(void)
   release(&log.lock);
 }
 
-//½«ÈÕÖ¾µÄlogheaderĞ´µ½´ÅÅÌ
+//å°†æ—¥å¿—çš„logheaderå†™åˆ°ç£ç›˜
 void
 commit_trans(void)
 {
   if (log.lh.n > 0) {
     write_head();    // Write header to disk -- the real commit
 
-    //´ÓÈÕÖ¾ÖĞÖğ¿éµÄ¶Á²¢°ÑËûÃÇĞ´µ½ÎÄ¼şÏµÍ³ÖĞºÏÊÊµÄµØ·½
+    //ä»æ—¥å¿—ä¸­é€å—çš„è¯»å¹¶æŠŠä»–ä»¬å†™åˆ°æ–‡ä»¶ç³»ç»Ÿä¸­åˆé€‚çš„åœ°æ–¹
     install_trans(); // Now install writes to home locations
     log.lh.n = 0; 
     write_head();    // Erase the transaction from the log
@@ -173,7 +173,7 @@ commit_trans(void)
 //   modify bp->data[]
 //   log_write(bp)
 //   brelse(bp)
-//Ğ´»ØÒ»¸ö¿é
+//å†™å›ä¸€ä¸ªå—
 void
 log_write(struct buf *b)
 {
