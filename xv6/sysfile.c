@@ -112,6 +112,9 @@ sys_fstat(void)
 }
 
 // Create the path new as a link to the same inode as old.
+// 找到old对应的i节点，old不能是目录文件。增加old的nlink
+// 在new这里的上级目录创建一个目录项，指向old
+// old和new必须在一个设备上。
 int
 sys_link(void)
 {
@@ -176,6 +179,7 @@ isdirempty(struct inode *dp)
 }
 
 //PAGEBREAK!
+// 减一个调用
 int
 sys_unlink(void)
 {
@@ -231,6 +235,9 @@ bad:
   return -1;
 }
 
+// 先获取目录
+// 检查有没有同名文件，有并且是一个普通文件，就直接返回。
+// 没有的话就ialloc一个新的，
 static struct inode*
 create(char *path, short type, short major, short minor)
 {
@@ -276,6 +283,9 @@ create(char *path, short type, short major, short minor)
   return ip;
 }
 
+// 分配了一个打开文件和文件描述符。
+// 如果 open 以 O_CREATE 调用，它就会调用 create。
+// 否则，它就会调用 namei 解析路径并引用inode。
 int
 sys_open(void)
 {

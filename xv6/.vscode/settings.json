@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "mmu.h": "c"
+        "mmu.h": "c",
+        "defs.h": "c",
+        "buf.h": "c",
+        "types.h": "c",
+        "param.h": "c",
+        "spinlock.h": "c"
     }
 }

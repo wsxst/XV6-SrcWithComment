@@ -10,11 +10,13 @@
 #include "spinlock.h"
 
 struct devsw devsw[NDEV];
+//这是全系统维护的一张文件表，最多可以打开100的个文件
 struct {
   struct spinlock lock;
   struct file file[NFILE];
 } ftable;
 
+//在buffer cache初始化以后调用
 void
 fileinit(void)
 {
@@ -22,6 +24,7 @@ fileinit(void)
 }
 
 // Allocate a file structure.
+// 扫描整个ftable，找一个没有被引用的文件，返回其引用
 struct file*
 filealloc(void)
 {
@@ -40,6 +43,7 @@ filealloc(void)
 }
 
 // Increment ref count for file f.
+// 复制文件：增加引用数就完事了
 struct file*
 filedup(struct file *f)
 {
@@ -52,6 +56,9 @@ filedup(struct file *f)
 }
 
 // Close file f.  (Decrement ref count, close when reaches 0.)
+// 一个进程关闭文件，让其引用数-1.
+// 如果没有引用数，设置类型为None。
+// 如果是管道，就close，如果是普通文件，就iput这个文件的inode
 void
 fileclose(struct file *f)
 {
@@ -64,6 +71,7 @@ fileclose(struct file *f)
     release(&ftable.lock);
     return;
   }
+  //复制内容
   ff = *f;
   f->ref = 0;
   f->type = FD_NONE;
@@ -73,12 +81,15 @@ fileclose(struct file *f)
     pipeclose(ff.pipe, ff.writable);
   else if(ff.type == FD_INODE){
     begin_trans();
+    //释放这个文件i节点。
     iput(ff.ip);
     commit_trans();
   }
 }
 
 // Get metadata about file f.
+// 这是一个系统调用sys_fstat调用的函数
+// 目的是将文件的i节点封装成stat返回。成功返回0.
 int
 filestat(struct file *f, struct stat *st)
 {
@@ -92,6 +103,10 @@ filestat(struct file *f, struct stat *st)
 }
 
 // Read from file f.
+// n是读多少个字节
+// 先检查可读；管道文件就管道读；否则正常读。返回读了多少个字节。
+// 具体是由readi实现的
+// 管道读没有偏移，不需要传进去
 int
 fileread(struct file *f, char *addr, int n)
 {
@@ -113,6 +128,7 @@ fileread(struct file *f, char *addr, int n)
 
 //PAGEBREAK!
 // Write to file f.
+// 
 int
 filewrite(struct file *f, char *addr, int n)
 {
@@ -129,6 +145,7 @@ filewrite(struct file *f, char *addr, int n)
     // and 2 blocks of slop for non-aligned writes.
     // this really belongs lower down, since writei()
     // might be writing a device like the console.
+    // 一次写入不能超出log大小，log包括i节点、间接块、分配块、2个slop块
     int max = ((LOGSIZE-1-1-2) / 2) * 512;
     int i = 0;
     while(i < n){
@@ -149,6 +166,7 @@ filewrite(struct file *f, char *addr, int n)
         panic("short filewrite");
       i += r;
     }
+    //如果写入不够，返回-1.
     return i == n ? n : -1;
   }
   panic("filewrite");

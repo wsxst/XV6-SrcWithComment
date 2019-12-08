@@ -105,8 +105,9 @@ struct proc {
   struct context *context;     // swtch() here to run process 切换进程时，需要维护的硬件寄存器内容
   void *chan;                  // If non-zero, sleeping on chan 如果该变量值不为NULL，则表示进程睡眠态时所处于的睡眠队列（的头指针）
   int killed;                  // If non-zero, have been killed 如果该变量值不为0，则表示该进程已经被杀死了
-  struct file *ofile[NOFILE];  // Open files 进程打开的文件数组
-  struct inode *cwd;           // Current directory
+  
+  struct file *ofile[NOFILE];  // Open files 进程打开的文件列表
+  struct inode *cwd;           // Current directory 当前目录
   char name[16];               // Process name (debugging) 这个值也就调试时有用，我觉得作用是让开发者方便看到具体是哪个进程的行为
 };
 

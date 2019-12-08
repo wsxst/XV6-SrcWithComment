@@ -1,11 +1,14 @@
+//最高层的，也是进程所看到的，一个打开文件用file来描述
+//即文件描述符。
+//注意，file与inode各有一个ref。
 struct file {
-  enum { FD_NONE, FD_PIPE, FD_INODE } type;
-  int ref; // reference count
-  char readable;
-  char writable;
-  struct pipe *pipe;
-  struct inode *ip;
-  uint off;
+  enum { FD_NONE, FD_PIPE, FD_INODE } type;//文件类型
+  int ref; // reference count，多少个进程引用了这个文件
+  char readable;      //可读
+  char writable;      //可写
+  struct pipe *pipe;  //管道文件
+  struct inode *ip; //i节点
+  uint off; //读写文件的偏移指针
 };
 
 //存储在磁盘中inode的结构体dinode，在内存中的存在形式

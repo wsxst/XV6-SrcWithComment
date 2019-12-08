@@ -326,7 +326,8 @@ iunlock(struct inode *ip)
 // be recycled.
 // If that was the last reference and the inode has no links
 // to it, free the inode (and its content) on disk.
-//释放指定的inode，即将inode中的ref减1。如果执行iput的进程是该inode在内存中的最后一个指向，而且没有links指向，则从disk中释放
+//释放指定的inode，实际上将inode中的ref减1。
+//如果执行iput的进程是该inode在内存中的最后一个指向，而且没有links指向，则从disk中释放
 void
 iput(struct inode *ip)
 {
@@ -548,6 +549,7 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 }
 
 // Write a new directory entry (name, inum) into the directory dp.
+// lzh-增加一个目录项。
 int
 dirlink(struct inode *dp, char *name, uint inum)
 {
@@ -592,6 +594,7 @@ dirlink(struct inode *dp, char *name, uint inum)
 //   skipelem("a", name) = "", setting name = "a"
 //   skipelem("", name) = skipelem("////", name) = 0
 //
+//lzh-将下一级目录的名称填入name，返回剩余的路径
 static char*
 skipelem(char *path, char *name)
 {
@@ -620,6 +623,10 @@ skipelem(char *path, char *name)
 // Look up and return the inode for a path name.
 // If parent != 0, return the inode for the parent and copy the final
 // path element into name, which must have room for DIRSIZ bytes.
+//lzh-首先判断是不是根目录开始，否则从当前目录
+//每次循环用skipelem返回下一级目录
+//首先将ip（即当前目录的i节点）锁住，判断是不是一个目录
+//最后返回一个i节点
 static struct inode*
 namex(char *path, int nameiparent, char *name)
 {
@@ -628,10 +635,12 @@ namex(char *path, int nameiparent, char *name)
   if(*path == '/')
     ip = iget(ROOTDEV, ROOTINO);
   else
+    //cwd是进程当前所在的目录
     ip = idup(proc->cwd);
 
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
+    //其实这个锁是为了让type有时间从磁盘取出来
     if(ip->type != T_DIR){
       iunlockput(ip);
       return 0;
@@ -648,20 +657,22 @@ namex(char *path, int nameiparent, char *name)
     iunlockput(ip);
     ip = next;
   }
+
   if(nameiparent){
     iput(ip);
     return 0;
   }
   return ip;
-}
 
+}
+// 包装了namex，给一个路径返回一个i节点
 struct inode*
 namei(char *path)
 {
   char name[DIRSIZ];
   return namex(path, 0, name);
 }
-
+// 返回上级目录的inode，name存文件名
 struct inode*
 nameiparent(char *path, char *name)
 {
